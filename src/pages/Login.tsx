@@ -1,26 +1,40 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Mail, Lock, ArrowRight, Chrome } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const { signIn, user } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (user) {
+            navigate("/dashboard");
+        }
+    }, [user, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Placeholder for authentication
-        setTimeout(() => {
-            toast.info("Para habilitar login, conecte o Lovable Cloud.");
-            setIsLoading(false);
-        }, 1000);
+        const { error } = await signIn(email, password);
+
+        if (error) {
+            toast.error(error.message || "Erro ao fazer login. Verifique suas credenciais.");
+        } else {
+            toast.success("Login realizado com sucesso!");
+            navigate("/dashboard");
+        }
+
+        setIsLoading(false);
     };
 
     return (

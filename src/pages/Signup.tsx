@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Mail, Lock, User, ArrowRight, Chrome, Check } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const benefits = [
     "10 posts grátis por mês",
@@ -19,16 +20,33 @@ const Signup = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const { signUp, user } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (user) {
+            navigate("/dashboard");
+        }
+    }, [user, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Placeholder for authentication
-        setTimeout(() => {
-            toast.info("Para habilitar signup, conecte o Lovable Cloud.");
-            setIsLoading(false);
-        }, 1000);
+        const { error } = await signUp(email, password);
+
+        if (error) {
+            if (error.message.includes("already registered")) {
+                toast.error("Este email já está cadastrado. Tente fazer login.");
+            } else {
+                toast.error(error.message || "Erro ao criar conta.");
+            }
+        } else {
+            toast.success("Conta criada! Verifique seu email para confirmar.");
+            navigate("/login");
+        }
+
+        setIsLoading(false);
     };
 
     return (

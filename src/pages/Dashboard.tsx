@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,8 +27,11 @@ import {
     User
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Dashboard = () => {
+    const { user, loading, signOut } = useAuth();
+    const navigate = useNavigate();
     const [topic, setTopic] = useState("");
     const [tone, setTone] = useState("");
     const [audience, setAudience] = useState("");
@@ -38,6 +41,30 @@ const Dashboard = () => {
     const [includeCTA, setIncludeCTA] = useState(true);
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedContent, setGeneratedContent] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!loading && !user) {
+            navigate("/login");
+        }
+    }, [user, loading, navigate]);
+
+    const handleLogout = async () => {
+        await signOut();
+        toast.success("Logout realizado com sucesso!");
+        navigate("/");
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (!user) {
+        return null;
+    }
 
     const handleGenerate = async () => {
         if (!topic || !tone || !audience) {
@@ -157,7 +184,10 @@ Qual dessas dicas você vai colocar em prática hoje? Me conta nos comentários!
                             </Link>
                         </div>
 
-                        <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-destructive transition-colors">
+                        <button 
+                            onClick={handleLogout}
+                            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-destructive transition-colors"
+                        >
                             <LogOut className="w-5 h-5" />
                             Sair
                         </button>
