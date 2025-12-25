@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -28,9 +27,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
+import { useGenerations } from "@/hooks/useGenerations";
 
 const Dashboard = () => {
     const { user, loading, signOut } = useAuth();
+    const { credits, loading: creditsLoading, useCredit, hasCredits } = useCredits();
+    const { saveGeneration } = useGenerations();
     const navigate = useNavigate();
     const [topic, setTopic] = useState("");
     const [tone, setTone] = useState("");
@@ -72,26 +75,54 @@ const Dashboard = () => {
             return;
         }
 
+        if (!hasCredits) {
+            toast.error("Você não tem crédito suficientes. Faça upgrade do seu plano!");
+            return;
+        }
+
         setIsGenerating(true);
 
-        // Placeholder for AI generation
-        setTimeout(() => {
-            setGeneratedContent(`🥗 Você sabia que uma alimentação equilibrada pode transformar sua vida?
-
-Muitas pessoas acham que comer saudável é caro e complicado, mas a verdade é que pequenas mudanças fazem TODA a diferença! 
-
-✨ Comece substituindo refrigerantes por água com limão
-✨ Inclua uma porção de vegetais em cada refeição
-✨ Planeje suas refeições no domingo
-
-Seu corpo vai agradecer! 💚
-
-Qual dessas dicas você vai colocar em prática hoje? Me conta nos comentários! 👇
-
-#nutrição #alimentaçãosaudável #vidasaudável #saúde #nutri #dicasdenutricao #emagrecimento #qualidadedevida`);
+        // Use credit first
+        const creditUser = await useCredit(1);
+        if (!creditUser) {
+            toast.error("Erro ao usar crédito. Tente novamente.");
             setIsGenerating(false);
-            toast.success("Conteúdo gerado com sucesso!");
-        }, 2000);
+            return;
+        }
+
+        // Placeholder for AI generation
+        const content = `🥗 Você sabia que uma alimentação equilibrada pode transformar sua vida?
+
+            Muitas pessoas acham que comer saudável é caro e complicado, mas a verdade é que pequenas mudanças fazem TODA a diferença! 
+
+            ✨ Comece substituindo refrigerantes por água com limão
+            ✨ Inclua uma porção de vegetais em cada refeição
+            ✨ Planeje suas refeições no domingo
+
+            Seu corpo vai agradecer! 💚
+
+            Qual dessas dicas você vai colocar em prática hoje? Me conta nos comentários! 👇
+
+            #nutrição #alimentaçãosaudável #vidasaudável #saúde #nutri #dicasdenutricao #emagrecimento #qualidadedevida`;
+
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Save generation to database
+        await saveGeneration({
+            topic,
+            tone,
+            audience,
+            postCount: parseInt(postCount),
+            includeHashtags,
+            includeEmojis,
+            includeCta: includeCTA,
+            generatedContent: content
+        });
+
+        setGeneratedContent(content);
+        setIsGenerating(false);
+        toast.success("Conteúdo gerado com sucesso!");
     };
 
     const handleCopy = () => {
@@ -168,13 +199,20 @@ Qual dessas dicas você vai colocar em prática hoje? Me conta nos comentários!
                     <div className="p-4 border-t border-border">
                         <div className="p-4 rounded-xl bg-accent mb-4">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium text-foreground">Plano Grátis</span>
+                                <span className="text-sm font-medium text-foreground">
+                                    Plano {credits?.plan === 'free' ? 'Grátis' : credits?.plan === 'pro' ? 'Pro' : 'Premium'}
+                                </span>
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                                    8/10 posts
+                                    {creditsLoading ? '...' : `${credits?.credits_used ?? 0}/${(credits?.credits_remaining ?? 0) + (credits?.credits_used ?? 0)} posts`}
                                 </span>
                             </div>
                             <div className="w-full bg-muted rounded-full h-2 mb-3">
-                                <div className="bg-primary h-2 rounded-full" style={{ width: "80%" }} />
+                                <div 
+                                    className="bg-primary h-2 rounded-full transition-all" 
+                                    style={{ 
+                                        width: credits ? `${(credits.credits_used / (credits.credits_remaining + credits.credits_used)) * 100}%` : '0%' 
+                                    }}
+                                />
                             </div>
                             <Link to="/pricing">
                                 <Button variant="hero" size="sm" className="w-full">
