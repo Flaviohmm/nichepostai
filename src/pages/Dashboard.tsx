@@ -158,7 +158,7 @@ const Dashboard = () => {
                         <ul className="space-y-2">
                             <li>
                                 <Link
-                                    to="/dashboard"
+                                    to={"/dashboard"}
                                     className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-accent text-accent-foreground font-medium"
                                 >
                                     <Home className="w-5 h-5" />
@@ -166,17 +166,17 @@ const Dashboard = () => {
                                 </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#"
+                                <Link
+                                    to={"/history"}
                                     className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                                 >
                                     <History className="w-5 h-5" />
                                     Histórico
-                                </a>
+                                </Link>
                             </li>
                             <li>
                                 <Link
-                                    to="/pricing"
+                                    to={"/pricing"}
                                     className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                                 >
                                     <CreditCard className="w-5 h-5" />
