@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -38,6 +39,7 @@ const Navbar = () => {
 
                     {/* Desktop CTA */}
                     <div className="hidden md:flex items-center gap-3">
+                        <ThemeToggle />
                         <Link to="/login">
                             <Button variant="ghost" size="sm">
                                 Entrar
@@ -96,6 +98,10 @@ const Navbar = () => {
                                 Depoimentos
                             </a>
                             <div className="flex flex-col gap-2 pt-4 border-t border-border">
+                                <div className="flex items-center justify-between py-2">
+                                    <span className="text-muted-foreground">Tema</span>
+                                    <ThemeToggle />
+                                </div>
                                 <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                                     <Button variant="outline" className="w-full">
                                         Entrar
